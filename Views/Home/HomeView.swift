@@ -221,6 +221,6 @@ struct HomeView: View {
 
 #Preview {
     let container = try! ModelContainer(for: Article.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
-    HomeView(viewModel: HomeViewModel(newsService: MockNewsService.shared))
+    return HomeView(viewModel: HomeViewModel(newsService: MockNewsService.shared))
         .modelContext(container.mainContext)
 }

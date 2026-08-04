@@ -164,6 +164,6 @@ struct SearchView: View {
 
 #Preview {
     let container = try! ModelContainer(for: Article.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
-    SearchView(viewModel: SearchViewModel(newsService: MockNewsService.shared))
+    return SearchView(viewModel: SearchViewModel(newsService: MockNewsService.shared))
         .modelContext(container.mainContext)
 }

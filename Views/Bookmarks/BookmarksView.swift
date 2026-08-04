@@ -74,6 +74,6 @@ struct BookmarksView: View {
 
 #Preview {
     let container = try! ModelContainer(for: Article.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
-    BookmarksView(viewModel: BookmarksViewModel(storageService: StorageService(context: container.mainContext)))
+    return BookmarksView(viewModel: BookmarksViewModel(storageService: StorageService(context: container.mainContext)))
         .modelContext(container.mainContext)
 }

@@ -202,7 +202,7 @@ struct ProfileView: View {
 
 #Preview {
     let container = try! ModelContainer(for: Article.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
-    ProfileView(viewModel: ProfileViewModel(storageService: StorageService(context: container.mainContext), authViewModel: AuthViewModel()))
+    return ProfileView(viewModel: ProfileViewModel(storageService: StorageService(context: container.mainContext), authViewModel: AuthViewModel()))
         .environmentObject(AuthViewModel())
         .modelContext(container.mainContext)
 }
