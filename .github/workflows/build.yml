@@ -1,0 +1,27 @@
+name: Build iOS App
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Build & Validate DailyPulse
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Project Generator
+        run: python3 generate_project.py
+
+      - name: Compile Application (xcodebuild)
+        run: |
+          xcodebuild -project DailyPulse.xcodeproj \
+                     -scheme DailyPulse \
+                     -sdk iphonesimulator \
+                     -destination 'generic/platform=iOS Simulator' \
+                     -quiet build
