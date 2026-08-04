@@ -97,11 +97,11 @@ def setup_assets(workspace_dir):
             json.dump(color_contents, f, indent=2)
 
 def generate_xcodeproj(workspace_dir):
-    print("Generating Xcode project structure...")
+    print("Generating Xcode project structure (including Unit Testing target & shared schemes)...")
     setup_assets(workspace_dir)
     
-    # Search for all source swift files recursively in designated directories only
-    swift_files = []
+    # 1. Search for core app Swift files
+    app_swift_files = []
     src_subdirs = ['App', 'Models', 'Views', 'ViewModels', 'Services', 'Networking', 'Components', 'Extensions', 'Utilities']
     for subdir in src_subdirs:
         subdir_path = os.path.join(workspace_dir, subdir)
@@ -111,44 +111,83 @@ def generate_xcodeproj(workspace_dir):
             for file in files:
                 if file.endswith(".swift"):
                     rel_path = os.path.relpath(os.path.join(root, file), workspace_dir)
-                    swift_files.append(rel_path)
-                
+                    app_swift_files.append(rel_path)
+                    
+    # 2. Search for test Swift files
+    test_swift_files = []
+    test_subdir = os.path.join(workspace_dir, "Tests")
+    if os.path.exists(test_subdir):
+        for root, _, files in os.walk(test_subdir):
+            for file in files:
+                if file.endswith(".swift"):
+                    rel_path = os.path.relpath(os.path.join(root, file), workspace_dir)
+                    test_swift_files.append(rel_path)
+                    
     assets_path = os.path.join("Resources", "Assets.xcassets")
     
-    # Generate UUIDs for all elements
-    target_uuid = "2C8891462CE004AB001122AA"
+    # 3. Main Project and Target UUIDs
     proj_uuid = "2C88913B2CE004AB001122AA"
-    sources_phase_uuid = "2C8891412CE004AB001122AA"
-    frameworks_phase_uuid = "2C8891422CE004AB001122AA"
-    resources_phase_uuid = "2C8891432CE004AB001122AA"
-    product_ref_uuid = "2C8891472CE004AB001122AA"
     main_group_uuid = "2C88913A2CE004AB001122AA"
     products_group_uuid = "2C8891452CE004AB001122AA"
+    
+    # App Target definitions
+    app_target_uuid = "2C8891462CE004AB001122AA"
+    app_sources_phase_uuid = "2C8891412CE004AB001122AA"
+    app_frameworks_phase_uuid = "2C8891422CE004AB001122AA"
+    app_resources_phase_uuid = "2C8891432CE004AB001122AA"
+    app_product_ref_uuid = "2C8891472CE004AB001122AA"
+    app_config_list_uuid = "2C88914A2CE004AB001122AA"
+    app_config_debug_uuid = "2C88914B2CE004AB001122AA"
+    app_config_release_uuid = "2C88914C2CE004AB001122AA"
+    
+    # Test Target definitions
+    test_target_uuid = "2C8891562CE004AB001122BB"
+    test_sources_phase_uuid = "2C8891512CE004AB001122BB"
+    test_frameworks_phase_uuid = "2C8891522CE004AB001122BB"
+    test_resources_phase_uuid = "2C8891532CE004AB001122BB"
+    test_product_ref_uuid = "2C8891572CE004AB001122BB"
+    test_config_list_uuid = "2C88915A2CE004AB001122BB"
+    test_config_debug_uuid = "2C88915B2CE004AB001122BB"
+    test_config_release_uuid = "2C88915C2CE004AB001122BB"
+    
+    # Target Dependency UUIDs
+    target_dep_uuid = "2C88915D2CE004AB001122BB"
+    container_proxy_uuid = "2C88915E2CE004AB001122BB"
     
     proj_config_list_uuid = "2C88913E2CE004AB001122AA"
     proj_config_debug_uuid = "2C88913F2CE004AB001122AA"
     proj_config_release_uuid = "2C8891402CE004AB001122AA"
     
-    target_config_list_uuid = "2C88914A2CE004AB001122AA"
-    target_config_debug_uuid = "2C88914B2CE004AB001122AA"
-    target_config_release_uuid = "2C88914C2CE004AB001122AA"
-    
+    # Map files
     file_map = {}
-    for path in swift_files:
+    
+    # Core app files
+    for path in app_swift_files:
         file_map[path] = {
             "ref": make_uuid(),
             "build": make_uuid(),
-            "type": "sourcecode.swift"
+            "type": "sourcecode.swift",
+            "is_test": False
         }
-    
-    # Assets catalog maps to Resources build phase
+        
+    # Assets catalog
     file_map[assets_path] = {
         "ref": make_uuid(),
         "build": make_uuid(),
-        "type": "folder.assetcatalog"
+        "type": "folder.assetcatalog",
+        "is_test": False
     }
     
-    # Build sections
+    # Test files
+    for path in test_swift_files:
+        file_map[path] = {
+            "ref": make_uuid(),
+            "build": make_uuid(),
+            "type": "sourcecode.swift",
+            "is_test": True
+        }
+    
+    # 4. Generate build files and file references
     pbx_build_files = ""
     pbx_file_references = ""
     
@@ -157,25 +196,29 @@ def generate_xcodeproj(workspace_dir):
         pbx_build_files += f"\t\t{data['build']} /* {basename} in Sources/Resources */ = {{isa = PBXBuildFile; fileRef = {data['ref']} /* {basename} */; }};\n"
         pbx_file_references += f"\t\t{data['ref']} /* {basename} */ = {{isa = PBXFileReference; lastKnownFileType = {data['type']}; path = \"{path}\"; sourceTree = \"<group>\"; }};\n"
         
-    # Standard target product file
-    pbx_file_references += f"\t\t{product_ref_uuid} /* DailyPulse.app */ = {{isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DailyPulse.app; sourceTree = BUILT_PRODUCTS_DIR; }};\n"
+    # Add products reference files
+    pbx_file_references += f"\t\t{app_product_ref_uuid} /* DailyPulse.app */ = {{isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DailyPulse.app; sourceTree = BUILT_PRODUCTS_DIR; }};\n"
+    pbx_file_references += f"\t\t{test_product_ref_uuid} /* DailyPulseTests.xctest */ = {{isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DailyPulseTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; }};\n"
     
-    # Compile sources and Resources build list
-    sources_files_list = ""
-    resources_files_list = ""
+    # 5. Compile lists
+    app_sources_list = ""
+    app_resources_list = ""
+    test_sources_list = ""
+    
     for path, data in file_map.items():
         basename = os.path.basename(path)
-        if path.endswith(".swift"):
-            sources_files_list += f"\t\t\t\t{data['build']} /* {basename} in Sources */,\n"
+        if data["is_test"]:
+            test_sources_list += f"\t\t\t\t{data['build']} /* {basename} in Sources */,\n"
         else:
-            resources_files_list += f"\t\t\t\t{data['build']} /* {basename} in Resources */,\n"
-            
-    # Group hierarchy definition
-    # Construct virtual tree of subgroups
+            if path.endswith(".swift"):
+                app_sources_list += f"\t\t\t\t{data['build']} /* {basename} in Sources */,\n"
+            else:
+                app_resources_list += f"\t\t\t\t{data['build']} /* {basename} in Resources */,\n"
+                
+    # 6. Group hierarchy definition
     subgroups = {}
     for path in file_map.keys():
         parts = path.split(os.sep)
-        # file is at parts[-1], subgroups are parts[0:-1]
         current_g = main_group_uuid
         for i in range(len(parts) - 1):
             sub_path = os.sep.join(parts[0:i+1])
@@ -187,7 +230,7 @@ def generate_xcodeproj(workspace_dir):
                 }
             subgroups[sub_path]["children"].append(parts[i+1])
             
-    # Format subgroups for output
+    # Format subgroups output
     pbx_groups = ""
     for sub_path, info in subgroups.items():
         children_lines = ""
@@ -205,19 +248,18 @@ def generate_xcodeproj(workspace_dir):
         pbx_groups += "\t\t\tsourceTree = \"<group>\";\n"
         pbx_groups += "\t\t};\n"
         
-    # Main Group declaration (references high level subgroups)
+    # Main group references
     main_children = ""
     for sub_path, info in subgroups.items():
         if os.sep not in sub_path: # Top level subgroup
             main_children += f"\t\t\t\t{info['uuid']} /* {info['name']} */,\n"
             
-    # Add products group
     main_children += f"\t\t\t\t{products_group_uuid} /* Products */,\n"
     
     # Products Group definition
     pbx_groups += f"\t\t{products_group_uuid} /* Products */ = {{\n"
     pbx_groups += "\t\t\tisa = PBXGroup;\n"
-    pbx_groups += f"\t\t\tchildren = (\n\t\t\t\t{product_ref_uuid} /* DailyPulse.app */,\n\t\t\t);\n"
+    pbx_groups += f"\t\t\tchildren = (\n\t\t\t\t{app_product_ref_uuid} /* DailyPulse.app */,\n\t\t\t\t{test_product_ref_uuid} /* DailyPulseTests.xctest */,\n\t\t\t);\n"
     pbx_groups += "\t\t\tname = Products;\n"
     pbx_groups += "\t\t\tsourceTree = \"<group>\";\n"
     pbx_groups += "\t\t};\n"
@@ -240,11 +282,28 @@ def generate_xcodeproj(workspace_dir):
 /* Begin PBXBuildFile */
 {pbx_build_files}/* End PBXBuildFile */
 
+/* Begin PBXContainerItemProxy */
+		{container_proxy_uuid} /* PBXContainerItemProxy */ = {{
+			isa = PBXContainerItemProxy;
+			containerPortal = {proj_uuid} /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = {app_target_uuid};
+			remoteInfo = DailyPulse;
+		}};
+/* End PBXContainerItemProxy */
+
 /* Begin PBXFileReference */
 {pbx_file_references}/* End PBXFileReference */
 
 /* Begin PBXFrameworksBuildPhase */
-		{frameworks_phase_uuid} /* Frameworks */ = {{
+		{app_frameworks_phase_uuid} /* Frameworks */ = {{
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		}};
+		{test_frameworks_phase_uuid} /* Frameworks */ = {{
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -258,13 +317,13 @@ def generate_xcodeproj(workspace_dir):
 {pbx_groups}/* End PBXGroup */
 
 /* Begin PBXNativeTarget */
-		{target_uuid} /* DailyPulse */ = {{
+		{app_target_uuid} /* DailyPulse */ = {{
 			isa = PBXNativeTarget;
-			buildConfigurationList = {target_config_list_uuid} /* Build configuration list for PBXNativeTarget "DailyPulse" */;
+			buildConfigurationList = {app_config_list_uuid} /* Build configuration list for PBXNativeTarget "DailyPulse" */;
 			buildPhases = (
-				{sources_phase_uuid} /* Sources */,
-				{frameworks_phase_uuid} /* Frameworks */,
-				{resources_phase_uuid} /* Resources */,
+				{app_sources_phase_uuid} /* Sources */,
+				{app_frameworks_phase_uuid} /* Frameworks */,
+				{app_resources_phase_uuid} /* Resources */,
 			);
 			buildRules = (
 			);
@@ -272,8 +331,26 @@ def generate_xcodeproj(workspace_dir):
 			);
 			name = DailyPulse;
 			productName = DailyPulse;
-			productReference = {product_ref_uuid} /* DailyPulse.app */;
+			productReference = {app_product_ref_uuid} /* DailyPulse.app */;
 			productType = "com.apple.product-type.application";
+		}};
+		{test_target_uuid} /* DailyPulseTests */ = {{
+			isa = PBXNativeTarget;
+			buildConfigurationList = {test_config_list_uuid} /* Build configuration list for PBXNativeTarget "DailyPulseTests" */;
+			buildPhases = (
+				{test_sources_phase_uuid} /* Sources */,
+				{test_frameworks_phase_uuid} /* Frameworks */,
+				{test_resources_phase_uuid} /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				{target_dep_uuid} /* PBXTargetDependency */,
+			);
+			name = DailyPulseTests;
+			productName = DailyPulseTests;
+			productReference = {test_product_ref_uuid} /* DailyPulseTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		}};
 /* End PBXNativeTarget */
 
@@ -285,9 +362,13 @@ def generate_xcodeproj(workspace_dir):
 				LastSwiftUpdateCheck = 1500;
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {{
-					{target_uuid} = {{
+					{app_target_uuid} = {{
 						CreatedOnToolsVersion = 15.0;
 						DevelopmentTeam = "";
+					}};
+					{test_target_uuid} = {{
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = {app_target_uuid};
 					}};
 				}};
 			}};
@@ -304,30 +385,53 @@ def generate_xcodeproj(workspace_dir):
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				{target_uuid} /* DailyPulse */,
+				{app_target_uuid} /* DailyPulse */,
+				{test_target_uuid} /* DailyPulseTests */,
 			);
 		}};
 /* End PBXProject */
 
 /* Begin PBXResourcesBuildPhase */
-		{resources_phase_uuid} /* Resources */ = {{
+		{app_resources_phase_uuid} /* Resources */ = {{
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-{resources_files_list}			);
+{app_resources_list}			);
+			runOnlyForDeploymentPostprocessing = 0;
+		}};
+		{test_resources_phase_uuid} /* Resources */ = {{
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		}};
 /* End PBXResourcesBuildPhase */
 
 /* Begin PBXSourcesBuildPhase */
-		{sources_phase_uuid} /* Sources */ = {{
+		{app_sources_phase_uuid} /* Sources */ = {{
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-{sources_files_list}			);
+{app_sources_list}			);
+			runOnlyForDeploymentPostprocessing = 0;
+		}};
+		{test_sources_phase_uuid} /* Sources */ = {{
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+{test_sources_list}			);
 			runOnlyForDeploymentPostprocessing = 0;
 		}};
 /* End PBXSourcesBuildPhase */
+
+/* Begin PBXTargetDependency */
+		{target_dep_uuid} /* PBXTargetDependency */ = {{
+			isa = PBXTargetDependency;
+			target = {app_target_uuid} /* DailyPulse */;
+			targetProxy = {container_proxy_uuid} /* PBXContainerItemProxy */;
+		}};
+/* End PBXTargetDependency */
 
 /* Begin XCBuildConfiguration */
 		{proj_config_debug_uuid} /* Debug */ = {{
@@ -446,7 +550,7 @@ def generate_xcodeproj(workspace_dir):
 			}};
 			name = Release;
 		}};
-		{target_config_debug_uuid} /* Debug */ = {{
+		{app_config_debug_uuid} /* Debug */ = {{
 			isa = XCBuildConfiguration;
 			buildSettings = {{
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -474,7 +578,7 @@ def generate_xcodeproj(workspace_dir):
 			}};
 			name = Debug;
 		}};
-		{target_config_release_uuid} /* Release */ = {{
+		{app_config_release_uuid} /* Release */ = {{
 			isa = XCBuildConfiguration;
 			buildSettings = {{
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -502,6 +606,46 @@ def generate_xcodeproj(workspace_dir):
 			}};
 			name = Release;
 		}};
+		{test_config_debug_uuid} /* Debug */ = {{
+			isa = XCBuildConfiguration;
+			buildSettings = {{
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = DailyPulseTests;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sanskarlohani.DailyPulseTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DailyPulse.app/DailyPulse";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			}};
+			name = Debug;
+		}};
+		{test_config_release_uuid} /* Release */ = {{
+			isa = XCBuildConfiguration;
+			buildSettings = {{
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = DailyPulseTests;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sanskarlohani.DailyPulseTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DailyPulse.app/DailyPulse";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			}};
+			name = Release;
+		}};
 /* End XCBuildConfiguration */
 
 /* Begin XCConfigurationList */
@@ -514,11 +658,20 @@ def generate_xcodeproj(workspace_dir):
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		}};
-		{target_config_list_uuid} /* Build configuration list for PBXNativeTarget "DailyPulse" */ = {{
+		{app_config_list_uuid} /* Build configuration list for PBXNativeTarget "DailyPulse" */ = {{
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				{target_config_debug_uuid} /* Debug */,
-				{target_config_release_uuid} /* Release */,
+				{app_config_debug_uuid} /* Debug */,
+				{app_config_release_uuid} /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		}};
+		{test_config_list_uuid} /* Build configuration list for PBXNativeTarget "DailyPulseTests" */ = {{
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				{test_config_debug_uuid} /* Debug */,
+				{test_config_release_uuid} /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -548,10 +701,106 @@ def generate_xcodeproj(workspace_dir):
     with open(os.path.join(workspace_path, "contents.xcworkspacedata"), "w") as f:
         f.write(workspace_data)
         
-    print("Project successfully generated!")
+    # Generate Shared Scheme XML so CLI xcodebuild test works out-of-the-box
+    shared_schemes_dir = os.path.join(xcodeproj_dir, "xcshareddata", "xcschemes")
+    os.makedirs(shared_schemes_dir, exist_ok=True)
+    
+    scheme_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<Scheme
+   LastUpgradeVersion = "1500"
+   version = "1.7">
+   <BuildAction
+      parallelizeBuildables = "YES"
+      buildImplicitDependencies = "YES">
+      <BuildActionEntries>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "{app_target_uuid}"
+               BuildableName = "DailyPulse.app"
+               BlueprintName = "DailyPulse"
+               ReferencedContainer = "container:DailyPulse.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+      </BuildActionEntries>
+   </BuildAction>
+   <TestAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      shouldRequestConcretePlatforms = "YES">
+      <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "{test_target_uuid}"
+               BuildableName = "DailyPulseTests.xctest"
+               BlueprintName = "DailyPulseTests"
+               ReferencedContainer = "container:DailyPulse.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+      </Testables>
+   </TestAction>
+   <LaunchAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      launchStyle = "0"
+      useCustomWorkingDirectory = "NO"
+      ignoresPersistentStateOnLaunch = "NO"
+      debugDocumentVersioning = "YES"
+      debugServiceExtension = "internal"
+      allowLocationSimulation = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "{app_target_uuid}"
+            BuildableName = "DailyPulse.app"
+            BlueprintName = "DailyPulse"
+            ReferencedContainer = "container:DailyPulse.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+   </LaunchAction>
+   <ProfileAction
+      buildConfiguration = "Release"
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      savedToolIdentifier = ""
+      useCustomWorkingDirectory = "NO"
+      ignoresPersistentStateOnLaunch = "NO"
+      debugDocumentVersioning = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "{app_target_uuid}"
+            BuildableName = "DailyPulse.app"
+            BlueprintName = "DailyPulse"
+            ReferencedContainer = "container:DailyPulse.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+   </ProfileAction>
+   <AnalyzeAction
+      buildConfiguration = "Debug">
+   </AnalyzeAction>
+   <ArchiveAction
+      buildConfiguration = "Release"
+      revealArchiveInOrganizer = "YES">
+   </ArchiveAction>
+</Scheme>
+"""
+    with open(os.path.join(shared_schemes_dir, "DailyPulse.xcscheme"), "w") as f:
+        f.write(scheme_xml)
+        
+    print("Project successfully generated with app and testing targets, plus shared scheme!")
 
 if __name__ == "__main__":
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    # Assuming files are directly inside the root or DailyPulse folder.
-    # The workspace represents /Users/sanskarlohani/personal-projects/DailyPulse.
     generate_xcodeproj(current_dir)
