@@ -1,0 +1,46 @@
+# Xcode
+#
+# Reference: https://github.com/github/gitignore/blob/main/Swift.gitignore
+
+# Build folders
+build/
+DerivedData/
+
+# User-specific Xcode settings
+*.xcuserstate
+project.xcworkspace/xcuserdata/
+*.xcuserdatad
+# Personal scheme settings (keep shared ones)
+xcuserdata/
+
+# Swift Package Manager
+#
+# Packages/
+.build/
+
+# CocoaPods
+#
+# We do not use Pods/ but good to ignore
+Pods/
+Podfile.lock
+
+# Carthage
+Carthage/Build/
+
+# Accidental / OS Files
+.DS_Store
+.DS_Store?
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Local configuration overrides (like personal API keys)
+*.local
+config.private.plist
