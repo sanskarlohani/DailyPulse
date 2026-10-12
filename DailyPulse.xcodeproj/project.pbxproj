@@ -12,7 +12,6 @@
 		17B03B7346A746F58734A2C0 /* Tests/DailyPulseTests/ViewModels/SearchViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F14A2CAF490B45D2BDA59038 /* Tests/DailyPulseTests/ViewModels/SearchViewModelTests.swift */; };
 		23A0EC7F881A494D85AFA5C0 /* Networking/NetworkError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13519370367742009ED16E86 /* Networking/NetworkError.swift */; };
 		26549820AFE74B8F618F543F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4B90BBC74FC18B7FF9D540B0 /* GoogleService-Info.plist */; };
-		2F39D9B35A31821AFDABBB19 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = "TEMP_F41B0B28-7475-4016-B789-9B3550649049" /* FirebaseCore */; };
 		3E60AF4519E446CD80F4CAB5 /* Views/Bookmarks/BookmarksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDDFA8ADAD3544A99A60C81C /* Views/Bookmarks/BookmarksView.swift */; };
 		42F0221E80E0459DB977728D /* Extensions/Color+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72CF297417094CD3876BD41B /* Extensions/Color+Extensions.swift */; };
 		4C5D0DCD03FA4E3A82ED77A2 /* Resources/Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E0CCB036E9A3452EBB4D03DD /* Resources/Assets.xcassets */; };
@@ -43,9 +42,7 @@
 		C000CADAE69F4B4194AC5B65 /* Services/API/MockNewsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97AC22CF112049ACAF543ED0 /* Services/API/MockNewsService.swift */; };
 		C12C6AF179C8485E8FE61B0C /* Views/Profile/ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03F090D1606745F0B069FEA2 /* Views/Profile/ProfileView.swift */; };
 		D1F991A104024E5A806ECEB1 /* Models/User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FDF5F3637CF4987804E0AE5 /* Models/User.swift */; };
-		D412D057E48CCA88C409795A /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = F995590865222D03534A6947 /* FirebaseAuth */; };
 		D47EB40E95114D7F9D7CC0D4 /* Components/NewsCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6362FA9B3F054231BCB9739F /* Components/NewsCard.swift */; };
-		D66E82D0B539A41CB5CB10CA /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = F37FF33DE35DAF8595DC3FC0 /* FirebaseCore */; };
 		D6C263CD33A74EFD8C55227A /* Networking/Endpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB5C14F4A8DD4AE6B74100D1 /* Networking/Endpoint.swift */; };
 		D7C5D32C9EAD4E57BCE3B532 /* Views/Authentication/ForgotPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B2E11F54834CBBA14FD010 /* Views/Authentication/ForgotPasswordView.swift */; };
 		D887BC7DC0884088B6AEEA08 /* Views/Home/HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05B5DE5CAE8F4746A7ED0DA6 /* Views/Home/HomeView.swift */; };
@@ -130,9 +127,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2F39D9B35A31821AFDABBB19 /* FirebaseCore in Frameworks */,
-				D66E82D0B539A41CB5CB10CA /* FirebaseCore in Frameworks */,
-				D412D057E48CCA88C409795A /* FirebaseAuth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -421,8 +415,6 @@
 			);
 			name = DailyPulseTests;
 			packageProductDependencies = (
-				F37FF33DE35DAF8595DC3FC0 /* FirebaseCore */,
-				F995590865222D03534A6947 /* FirebaseAuth */,
 			);
 			productName = DailyPulseTests;
 			productReference = 2C8891572CE004AB001122BB /* DailyPulseTests.xctest */;
@@ -833,21 +825,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 872BB8668CCC323AB2AE15BE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseFirestore;
-		};
-		F37FF33DE35DAF8595DC3FC0 /* FirebaseCore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 872BB8668CCC323AB2AE15BE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseCore;
-		};
-		F995590865222D03534A6947 /* FirebaseAuth */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 872BB8668CCC323AB2AE15BE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAuth;
-		};
-		"TEMP_F41B0B28-7475-4016-B789-9B3550649049" /* FirebaseCore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 872BB8668CCC323AB2AE15BE /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
