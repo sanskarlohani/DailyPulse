@@ -38,7 +38,7 @@ final class HomeViewModelTests: XCTestCase {
         // Given loaded state
         await sut.loadContent()
         XCTAssertEqual(sut.selectedCategory, "General")
-        let firstCategoryCount = sut.articles.count
+        _ = sut.articles.count
         
         // When: Switching category to Business (triggers refresh)
         sut.selectedCategory = "Business"

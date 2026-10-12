@@ -5,11 +5,8 @@ struct MainTabView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var authViewModel: AuthViewModel
     
-    // ViewModels initialized via state to ensure they persist in view hierarchy
     @StateObject private var homeViewModel = HomeViewModel()
     @StateObject private var searchViewModel = SearchViewModel()
-    @State private var bookmarksViewModel: BookmarksViewModel?
-    @State private var profileViewModel: ProfileViewModel?
     
     var body: some View {
         TabView {
@@ -26,46 +23,42 @@ struct MainTabView: View {
                 }
             
             // Tab 3: Bookmarks
-            if let bookmarksVM = bookmarksViewModel {
-                BookmarksView(viewModel: bookmarksVM)
-                    .tabItem {
-                        Label("Saved", systemImage: "bookmark.fill")
-                    }
-            } else {
-                ProgressView()
-                    .tabItem {
-                        Label("Saved", systemImage: "bookmark.fill")
-                    }
-            }
+            BookmarksTabContainer(modelContext: modelContext)
+                .tabItem {
+                    Label("Saved", systemImage: "bookmark.fill")
+                }
             
             // Tab 4: Profile
-            if let profileVM = profileViewModel {
-                ProfileView(viewModel: profileVM)
-                    .tabItem {
-                        Label("Profile", systemImage: "person.fill")
-                    }
-            } else {
-                ProgressView()
-                    .tabItem {
-                        Label("Profile", systemImage: "person.fill")
-                    }
-            }
-        }
-        .onAppear {
-            setupViewModels()
+            ProfileTabContainer(modelContext: modelContext, authViewModel: authViewModel)
+                .tabItem {
+                    Label("Profile", systemImage: "person.fill")
+                }
         }
         .tint(.brandBlue)
     }
+}
+
+// MARK: - Container Views for ModelContext-dependent ViewModels
+private struct BookmarksTabContainer: View {
+    @StateObject private var viewModel: BookmarksViewModel
     
-    private func setupViewModels() {
-        let storage = StorageService(context: modelContext)
-        
-        if bookmarksViewModel == nil {
-            bookmarksViewModel = BookmarksViewModel(storageService: storage)
-        }
-        
-        if profileViewModel == nil {
-            profileViewModel = ProfileViewModel(storageService: storage, authViewModel: authViewModel)
-        }
+    init(modelContext: ModelContext) {
+        _viewModel = StateObject(wrappedValue: BookmarksViewModel(storageService: StorageService(context: modelContext)))
+    }
+    
+    var body: some View {
+        BookmarksView(viewModel: viewModel)
+    }
+}
+
+private struct ProfileTabContainer: View {
+    @StateObject private var viewModel: ProfileViewModel
+    
+    init(modelContext: ModelContext, authViewModel: AuthViewModel) {
+        _viewModel = StateObject(wrappedValue: ProfileViewModel(storageService: StorageService(context: modelContext), authViewModel: authViewModel))
+    }
+    
+    var body: some View {
+        ProfileView(viewModel: viewModel)
     }
 }

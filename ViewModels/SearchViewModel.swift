@@ -16,6 +16,7 @@ final class SearchViewModel: ObservableObject {
     private var currentPage = 1
     private var hasMore = true
     private var cancellables = Set<AnyCancellable>()
+    private var searchTask: Task<Void, Never>?
     
     private let newsService: NewsServiceProtocol
     private let mockService: NewsServiceProtocol
@@ -35,7 +36,10 @@ final class SearchViewModel: ObservableObject {
             .removeDuplicates()
             .sink { [weak self] query in
                 guard let self = self else { return }
-                Task {
+                // Cancel previous running search task to prevent race conditions
+                self.searchTask?.cancel()
+                self.searchTask = Task { [weak self] in
+                    guard let self = self else { return }
                     if query.trimmingCharacters(in: .whitespacesAndNewlines).count >= 3 {
                         await self.performSearch(query: query)
                     } else if query.isEmpty {
@@ -68,6 +72,7 @@ final class SearchViewModel: ObservableObject {
         
         do {
             let fetched = try await newsService.searchArticles(query: trimmedQuery, page: currentPage)
+            guard !Task.isCancelled else { return }
             
             if isRefresh {
                 self.searchResults = fetched
@@ -80,17 +85,25 @@ final class SearchViewModel: ObservableObject {
             } else {
                 currentPage += 1
             }
+        } catch is CancellationError {
+            return
         } catch {
+            guard !Task.isCancelled else { return }
             print("Live search failed, trying mock: \(error.localizedDescription)")
             do {
                 let fetchedMock = try await mockService.searchArticles(query: trimmedQuery, page: currentPage)
+                guard !Task.isCancelled else { return }
+                
                 if isRefresh {
                     self.searchResults = fetchedMock
                 } else {
                     self.searchResults.append(contentsOf: fetchedMock)
                 }
                 hasMore = false
+            } catch is CancellationError {
+                return
             } catch {
+                guard !Task.isCancelled else { return }
                 self.errorMessage = "Failed to fetch search results: \(error.localizedDescription)"
             }
         }

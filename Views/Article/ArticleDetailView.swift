@@ -1,8 +1,10 @@
 import SwiftUI
+import SwiftData
 
 struct ArticleDetailView: View {
-    @StateObject var viewModel: ArticleDetailViewModel
-    @Environment(\.dismiss) var dismiss
+    @ObservedObject var viewModel: ArticleDetailViewModel
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -276,13 +278,11 @@ struct ArticleDetailView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
                         ForEach(viewModel.relatedArticles) { relArticle in
-                            // Related article card
+                            // Related article card safely injected with environment modelContext
                             NavigationLink(destination: ArticleDetailView(
                                 viewModel: ArticleDetailViewModel(
                                     article: relArticle,
-                                    storageService: viewModel.article.modelContext != nil ? 
-                                        StorageService(context: viewModel.article.modelContext!) : 
-                                        StorageService(context: viewModel.relatedArticles.first!.modelContext!)
+                                    storageService: StorageService(context: modelContext)
                                 )
                             )) {
                                 RelatedArticleCard(article: relArticle)

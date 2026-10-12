@@ -105,6 +105,18 @@ struct ForgotPasswordView: View {
             }
         }
         .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {
+                    dismiss()
+                }) {
+                    Image(systemName: "chevron.left")
+                        .font(.body)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primary)
+                }
+            }
+        }
     }
 }
 

@@ -38,6 +38,10 @@ final class APIClient: APIClientProtocol {
             }
         } catch let error as NetworkError {
             throw error
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let urlError as URLError where urlError.code == .cancelled {
+            throw CancellationError()
         } catch {
             throw NetworkError.requestFailed(error)
         }

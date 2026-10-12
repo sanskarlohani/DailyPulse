@@ -9,11 +9,16 @@ protocol NewsServiceProtocol {
 final class NewsAPIService: NewsServiceProtocol {
     private let client: APIClientProtocol
     
-    // Fallback/demo API Key to allow testing out-of-the-box.
-    // Recommended to change this in SettingsView.
+    // Safely retrieve API key from Environment, Info.plist, or UserDefaults
+    // Avoids committing plain-text API secrets to version control.
     private var apiKey: String {
-        let savedKey = UserDefaults.standard.string(forKey: "news_api_key") ?? ""
-        return savedKey.isEmpty ? "4855224cd55045809fe8c8d7d2e603c6" : savedKey // Sample key
+        if let envKey = ProcessInfo.processInfo.environment["NEWS_API_KEY"], !envKey.isEmpty {
+            return envKey
+        }
+        if let bundleKey = Bundle.main.infoDictionary?["NEWS_API_KEY"] as? String, !bundleKey.isEmpty {
+            return bundleKey
+        }
+        return UserDefaults.standard.string(forKey: "news_api_key") ?? ""
     }
     
     init(client: APIClientProtocol = APIClient()) {
