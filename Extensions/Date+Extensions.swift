@@ -1,5 +1,33 @@
 import Foundation
 
+private enum CachedDateFormatters {
+    static let mediumDate: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter
+    }()
+    
+    static let iso8601: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+    
+    static let standard: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter
+    }()
+    
+    static let fractionalSeconds: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter
+    }()
+}
+
 extension Date {
     /// Formats the date to a relative string (e.g., "3 hours ago", "Yesterday")
     func timeAgo() -> String {
@@ -8,9 +36,7 @@ extension Date {
         let components = calendar.dateComponents([.minute, .hour, .day, .weekOfYear], from: self, to: now)
         
         if let week = components.weekOfYear, week > 0 {
-            let formatter = DateFormatter()
-            formatter.dateStyle = .medium
-            return formatter.string(from: self)
+            return CachedDateFormatters.mediumDate.string(from: self)
         }
         
         if let day = components.day, day > 0 {
@@ -33,23 +59,18 @@ extension Date {
 }
 
 extension String {
-    /// Parses ISO8601 date string to Date object
+    /// Parses ISO8601 date string to Date object using cached formatters
     func toDate() -> Date? {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime]
-        if let date = formatter.date(from: self) {
+        if let date = CachedDateFormatters.iso8601.date(from: self) {
             return date
         }
         
         // Fallback for missing fractional seconds or timezone variations
-        let fallbackFormatter = DateFormatter()
-        fallbackFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
-        if let date = fallbackFormatter.date(from: self) {
+        if let date = CachedDateFormatters.standard.date(from: self) {
             return date
         }
         
-        fallbackFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-        return fallbackFormatter.date(from: self)
+        return CachedDateFormatters.fractionalSeconds.date(from: self)
     }
     
     /// Helper to format date string directly

@@ -1,0 +1,98 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// Collection: users
+// Document ID: {userId} (matches request.auth.uid)
+// Fields:
+//   - id: string (required, immutable) - matches userId / Auth UID
+//   - email: string (required) - email address of user or guest fallback
+//   - name: string (required, 1-100 chars) - user display name
+//   - avatarURL: string (optional, valid URL if present)
+//   - joinedDate: timestamp (required, immutable) - account creation date
+//   - preferences: map (required)
+//       - isDarkModeEnabled: bool (required)
+//       - isNotificationEnabled: bool (required)
+//       - selectedLanguage: string (required, 1-50 chars)
+//       - selectedCategories: list of strings (required, <= 20 items)
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidEmail(email) {
+      return email is string &&
+        email.size() > 3 &&
+        email.size() <= 150 &&
+        email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidPreferences(prefs) {
+      return prefs is map &&
+        prefs.keys().hasAll(['isDarkModeEnabled', 'isNotificationEnabled', 'selectedLanguage', 'selectedCategories']) &&
+        prefs.keys().hasOnly(['isDarkModeEnabled', 'isNotificationEnabled', 'selectedLanguage', 'selectedCategories']) &&
+        prefs.isDarkModeEnabled is bool &&
+        prefs.isNotificationEnabled is bool &&
+        prefs.selectedLanguage is string &&
+        prefs.selectedLanguage.size() >= 1 &&
+        prefs.selectedLanguage.size() <= 50 &&
+        prefs.selectedCategories is list &&
+        prefs.selectedCategories.size() <= 20;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['id', 'email', 'name', 'joinedDate', 'preferences']) &&
+        data.keys().hasOnly(['id', 'email', 'name', 'avatarURL', 'joinedDate', 'preferences']) &&
+        data.id is string &&
+        data.id == request.auth.uid &&
+        data.name is string &&
+        data.name.size() >= 1 &&
+        data.name.size() <= 100 &&
+        isValidEmail(data.email) &&
+        data.joinedDate is timestamp &&
+        isValidPreferences(data.preferences) &&
+        (!('avatarURL' in data) || data.avatarURL == null || (data.avatarURL is string && data.avatarURL.size() <= 500));
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      // Strictly owner-only read (contains PII / private preferences)
+      allow read: if isOwner(userId);
+
+      // Create: must be owner, valid payload, and id matching auth.uid
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+
+      // Update: must be owner, valid payload, and immutable id/joinedDate preserved
+      allow update: if isOwner(userId) &&
+                       isValidUser(request.resource.data) &&
+                       request.resource.data.id == resource.data.id &&
+                       request.resource.data.joinedDate == resource.data.joinedDate;
+
+      // Deletes not allowed from client SDK directly
+      allow delete: if false;
+    }
+
+    // Default deny all other paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

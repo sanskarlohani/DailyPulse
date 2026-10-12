@@ -19,9 +19,10 @@ final class AuthViewModel: ObservableObject {
         currentUser != nil
     }
     
-    init(authService: AuthService = AuthService()) {
-        self.authService = authService
-        self.currentUser = authService.currentUser
+    init(authService: AuthService? = nil) {
+        let service = authService ?? AuthService()
+        self.authService = service
+        self.currentUser = service.currentUser
     }
     
     func login() async {

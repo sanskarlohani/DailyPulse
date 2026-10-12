@@ -1,10 +1,18 @@
 import SwiftUI
 import SwiftData
+import FirebaseCore
 
 @main
 struct DailyPulseApp: App {
-    @StateObject private var authViewModel = AuthViewModel()
+    @StateObject private var authViewModel: AuthViewModel
     @State private var isSplashActive = false
+    
+    init() {
+        if FirebaseApp.app() == nil {
+            FirebaseApp.configure()
+        }
+        _authViewModel = StateObject(wrappedValue: AuthViewModel())
+    }
     
     var body: some Scene {
         WindowGroup {
