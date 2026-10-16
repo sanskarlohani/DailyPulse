@@ -24,6 +24,22 @@ DailyPulse is a premium, App Store-quality digital newspaper application for iOS
 
 ---
 
+## Tech Stack
+
+| Layer | Technology | Description |
+| :--- | :--- | :--- |
+| **Framework & UI** | **SwiftUI** | Declarative modern UI with custom animations, soft gradients, and high-contrast light/dark mode |
+| **Language** | **Swift 6** | Safe concurrency model (`async`/`await`, `@MainActor`, and strict concurrency checking) |
+| **Architecture** | **MVVM** | Model-View-ViewModel with clean separation of presentation, business logic, and services |
+| **Local Persistence** | **SwiftData** | Apple's native schema-based persistence for bookmarks, offline caching, and reading history |
+| **Networking** | **URLSession & REST API** | Robust async network layer consuming NewsAPI feeds with seamless `MockNewsService` fallback |
+| **Backend & Auth** | **Firebase** | Firebase Authentication (Email/Password & Guest session) and Cloud Firestore profile sync |
+| **Reactive Pipelines** | **Combine** | Debounced search queries and reactive state updates across views |
+| **Tactile UX** | **CoreHaptics** | Haptic vibration feedback for tab switching, button taps, refresh triggers, and bookmarks |
+| **Quality & Testing** | **XCTest & SwiftLint** | Unit tests for ViewModels/Services, adherence to SwiftLint rules, and GitHub Actions CI |
+
+---
+
 ## Directory Structure
 
 ```
