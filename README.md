@@ -2,6 +2,13 @@
 
 DailyPulse is a premium, App Store-quality digital newspaper application for iOS built using **SwiftUI**, **SwiftData**, and **MVVM (Model-View-ViewModel)** architecture. It delivers a fast, responsive, and tactile news-reading experience using clean, decoupled networking layers, haptic feedback, and modern animations.
 
+## App Screenshots
+
+| Welcome & Auth | Home Feed | Article Reader | Profile & Preferences |
+| :---: | :---: | :---: | :---: |
+| <img src="screenshots/01_login.png" width="215" alt="Login Screen" /> | <img src="screenshots/02_home.png" width="215" alt="Home Screen" /> | <img src="screenshots/03_article.png" width="215" alt="Article View" /> | <img src="screenshots/04_profile.png" width="215" alt="Profile View" /> |
+| **Instant Guest & User Sign-In** | **Breaking News & Category Chips** | **Parallax Hero & Saved Articles** | **Dark Mode & Reading History** |
+
 ## Key Features
 
 * **Apple-level Design Aesthetics**: High-contrast dark and light mode, soft gradients, and modern layout spacing.
